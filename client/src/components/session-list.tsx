@@ -4,13 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Trash2, ChevronRight, ChevronDown, Pencil, X, Check } from "lucide-react";
 import { type Session } from "@shared/schema";
 import { format, isSameDay } from "date-fns";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import React, { useState, useEffect } from "react";
 import { currencies } from "./currency-selector";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
+import JobSelector from "@/components/job-selector";
 
 interface SessionListProps {
   sessions: Session[];
@@ -34,7 +35,6 @@ export default function SessionList({ sessions }: SessionListProps) {
   const [editingValues, setEditingValues] = useState<EditingSession | null>(null);
   const { toast } = useToast();
 
-  // Update display frequently for smooth animation
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -143,7 +143,6 @@ export default function SessionList({ sessions }: SessionListProps) {
     const end = session.endTime ? new Date(session.endTime) :
                session.isActive ? new Date() : new Date(session.startTime);
     const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    // Calculate earnings directly in PLN without currency conversion
     const earnings = hours * session.rate;
     return earnings.toFixed(2);
   };
@@ -154,7 +153,6 @@ export default function SessionList({ sessions }: SessionListProps) {
     }, 0).toFixed(2);
   };
 
-  // Group sessions by date
   const groupedSessions = sessions.reduce((groups: GroupedSessions, session) => {
     const date = format(new Date(session.startTime), 'yyyy-MM-dd');
     if (!groups[date]) {
@@ -214,17 +212,16 @@ export default function SessionList({ sessions }: SessionListProps) {
                         className="flex items-center justify-between p-4 rounded-lg border bg-background/50"
                       >
                         {editingSessionId === session.id && editingValues ? (
-                          <div className="flex-1 space-y-2">
-                            <Input
-                              type="text"
-                              value={editingValues.jobName}
-                              onChange={(e) => setEditingValues({
-                                ...editingValues,
-                                jobName: e.target.value
-                              })}
-                              placeholder="Enter job name"
-                              className="mb-2"
-                            />
+                          <div className="flex-1 space-y-4">
+                            <div className="w-full">
+                              <JobSelector 
+                                value={editingValues.jobName} 
+                                onValueChange={(value) => setEditingValues({
+                                  ...editingValues,
+                                  jobName: value
+                                })} 
+                              />
+                            </div>
                             <div className="flex gap-2 items-center">
                               <Input
                                 type="number"
