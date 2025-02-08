@@ -13,6 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { type Session } from "@shared/schema";
 import { format, isSameDay } from "date-fns";
 import { currencies } from "./currency-selector";
+import { Badge } from "@/components/ui/badge";
 
 const historicalSessionSchema = z.object({
   date: z.date(),
@@ -44,6 +45,11 @@ export default function HistoricalTracking() {
   const selectedDateSessions = sessions.filter(session =>
     selectedDate && isSameDay(new Date(session.startTime), selectedDate)
   );
+
+  // Get all dates that have scheduled sessions
+  const scheduledDates = sessions
+    .filter((session: Session) => session.isScheduled)
+    .map((session: Session) => new Date(session.startTime));
 
   const form = useForm<HistoricalSessionFormValues>({
     resolver: zodResolver(historicalSessionSchema),
@@ -125,42 +131,55 @@ export default function HistoricalTracking() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Date</FormLabel>
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={(date) => {
-                          field.onChange(date);
-                          setSelectedDate(date);
-                        }}
-                        disabled={(date) => date > new Date()}
-                        className="rounded-md border"
-                      />
-                      <FormMessage />
-                      {selectedDateSessions.length > 0 && (
-                        <div className="mt-4 space-y-3">
-                          <h3 className="font-medium">Sessions on {selectedDate ? format(selectedDate, 'MMM d, yyyy') : ''}</h3>
-                          <div className="space-y-2">
-                            {selectedDateSessions.map((session) => (
-                              <div
-                                key={session.id}
-                                className="p-3 rounded-md border bg-background/50"
-                              >
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="secondary" className="bg-primary/20">●</Badge>
+                          <span className="text-sm text-muted-foreground">Scheduled sessions</span>
+                        </div>
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            setSelectedDate(date);
+                          }}
+                          disabled={(date) => date > new Date()}
+                          modifiers={{ scheduled: scheduledDates }}
+                          modifiersStyles={{
+                            scheduled: {
+                              backgroundColor: "hsl(var(--primary) / 0.2)",
+                              borderRadius: "4px",
+                            }
+                          }}
+                          className="rounded-md border"
+                        />
+                        <FormMessage />
+                        {selectedDateSessions.length > 0 && (
+                          <div className="mt-4 space-y-3">
+                            <h3 className="font-medium">Sessions on {selectedDate ? format(selectedDate, 'MMM d, yyyy') : ''}</h3>
+                            <div className="space-y-2">
+                              {selectedDateSessions.map((session) => (
+                                <div
+                                  key={session.id}
+                                  className="p-3 rounded-md border bg-background/50"
+                                >
+                                  <p className="font-medium">
+                                    Rate: {currencies["PLN"].symbol}{session.rate}/hr
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {format(new Date(session.startTime), 'HH:mm')} - {format(new Date(session.endTime || session.startTime), 'HH:mm')}
+                                  </p>
+                                </div>
+                              ))}
+                              <div className="pt-2 border-t">
                                 <p className="font-medium">
-                                  Rate: {currencies["PLN"].symbol}{session.rate}/hr
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {format(new Date(session.startTime), 'HH:mm')} - {format(new Date(session.endTime || session.startTime), 'HH:mm')}
+                                  Total for day: {currencies["PLN"].symbol}{calculateDayEarnings()}
                                 </p>
                               </div>
-                            ))}
-                            <div className="pt-2 border-t">
-                              <p className="font-medium">
-                                Total for day: {currencies["PLN"].symbol}{calculateDayEarnings()}
-                              </p>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </FormItem>
                   )}
                 />
