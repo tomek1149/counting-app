@@ -3,8 +3,10 @@ import RateForm from "@/components/rate-form";
 import Timer from "@/components/timer";
 import SessionList from "@/components/session-list";
 import Summary from "@/components/summary";
+import WorkingHoursForm from "@/components/working-hours-form";
 import { useQuery } from "@tanstack/react-query";
 import type { Session } from "@shared/schema";
+import { Separator } from "@/components/ui/separator";
 
 export default function Home() {
   const { data: sessions = [] } = useQuery<Session[]>({
@@ -22,6 +24,9 @@ export default function Home() {
           </CardHeader>
           <CardContent className="space-y-6">
             <RateForm />
+            <Separator />
+            <WorkingHoursForm />
+            <Separator />
             <Timer />
           </CardContent>
         </Card>
