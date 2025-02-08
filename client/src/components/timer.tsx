@@ -1,0 +1,80 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Play, Pause } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
+export default function Timer() {
+  const [isRunning, setIsRunning] = useState(false);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const { toast } = useToast();
+
+  const createSession = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/sessions", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
+    },
+  });
+
+  const updateSession = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", `/api/sessions/${data.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
+    },
+  });
+
+  const toggleTimer = async () => {
+    const rate = parseInt(localStorage.getItem("hourlyRate") || "0");
+    if (rate <= 0) {
+      toast({
+        title: "Error",
+        description: "Please set an hourly rate first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isRunning) {
+      const now = new Date();
+      setStartTime(now);
+      setIsRunning(true);
+      await createSession.mutateAsync({
+        rate,
+        startTime: now.toISOString(),
+        isActive: true,
+      });
+    } else {
+      setIsRunning(false);
+      const sessions = await queryClient.fetchQuery({ queryKey: ["/api/sessions"] });
+      const activeSession = sessions.find((s: any) => s.isActive);
+      if (activeSession) {
+        await updateSession.mutateAsync({
+          id: activeSession.id,
+          endTime: new Date().toISOString(),
+          isActive: false,
+        });
+      }
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center">
+      <Button
+        size="lg"
+        onClick={toggleTimer}
+        className={isRunning ? "bg-destructive hover:bg-destructive/90" : ""}
+      >
+        {isRunning ? <Pause className="mr-2" /> : <Play className="mr-2" />}
+        {isRunning ? "Stop" : "Start"} Timer
+      </Button>
+    </div>
+  );
+}
