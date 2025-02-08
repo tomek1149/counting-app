@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/contexts/language-context";
+import type { Session } from "@shared/schema";
 
 const daysOfWeek = [
   { label: "Monday", value: "MON" },
