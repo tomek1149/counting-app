@@ -8,19 +8,25 @@ import HistoricalTracking from "@/components/historical-tracking";
 import { useQuery } from "@tanstack/react-query";
 import type { Session } from "@shared/schema";
 import { Separator } from "@/components/ui/separator";
+import { useLanguage } from "@/contexts/language-context";
+import LanguageSelector from "@/components/language-selector";
 
 export default function Home() {
   const { data: sessions = [] } = useQuery<Session[]>({
     queryKey: ["/api/sessions"],
   });
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="mx-auto max-w-4xl space-y-8">
+        <div className="flex justify-end">
+          <LanguageSelector />
+        </div>
         <Card>
           <CardHeader>
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Time Tracking & Earnings
+              {t('home', 'title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">

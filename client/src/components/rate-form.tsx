@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/language-context";
 
 const rateSchema = z.object({
   rate: z.number().min(1, "Rate must be greater than 0"),
@@ -15,6 +16,7 @@ type RateFormValues = z.infer<typeof rateSchema>;
 
 export default function RateForm() {
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const form = useForm<RateFormValues>({
     resolver: zodResolver(rateSchema),
@@ -33,6 +35,10 @@ export default function RateForm() {
 
   const onSubmit = (data: RateFormValues) => {
     localStorage.setItem("hourlyRate", data.rate.toString());
+    toast({
+      title: t('common', 'success'),
+      description: "Rate updated successfully",
+    });
   };
 
   return (
@@ -44,7 +50,7 @@ export default function RateForm() {
             name="rate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Hourly Rate (PLN)</FormLabel>
+                <FormLabel>{t('common', 'hourlyRate')} (PLN)</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
@@ -57,7 +63,7 @@ export default function RateForm() {
               </FormItem>
             )}
           />
-          <Button type="submit">Set Rate</Button>
+          <Button type="submit">{t('home', 'setRate')}</Button>
         </form>
       </Form>
     </div>
