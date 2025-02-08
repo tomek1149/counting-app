@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash2, ChevronRight, ChevronDown, Pencil, X, Check } from "lucide-react";
 import { type Session } from "@shared/schema";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, isSameMonth } from "date-fns";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
@@ -18,7 +18,9 @@ interface SessionListProps {
 }
 
 interface GroupedSessions {
-  [date: string]: Session[];
+  [key: string]: {
+    [key: string]: Session[];
+  };
 }
 
 interface EditingSession {
@@ -30,7 +32,8 @@ interface EditingSession {
 
 export default function SessionList({ sessions }: SessionListProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [openDates, setOpenDates] = useState<Set<string>>(new Set());
+  const [openMonths, setOpenMonths] = useState<Set<string>>(new Set());
+  const [openDays, setOpenDays] = useState<Set<string>>(new Set());
   const [editingSessionId, setEditingSessionId] = useState<number | null>(null);
   const [editingValues, setEditingValues] = useState<EditingSession | null>(null);
   const { toast } = useToast();
@@ -153,24 +156,49 @@ export default function SessionList({ sessions }: SessionListProps) {
     }, 0).toFixed(2);
   };
 
-  const groupedSessions = sessions.reduce((groups: GroupedSessions, session) => {
-    const date = format(new Date(session.startTime), 'yyyy-MM-dd');
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(session);
-    return groups;
-  }, {});
-
-  const toggleDate = (date: string) => {
-    const newOpenDates = new Set(openDates);
-    if (newOpenDates.has(date)) {
-      newOpenDates.delete(date);
-    } else {
-      newOpenDates.add(date);
-    }
-    setOpenDates(newOpenDates);
+  const calculateMonthEarnings = (monthSessions: Session[]) => {
+    return monthSessions.reduce((total, session) => {
+      return total + parseFloat(calculateEarnings(session));
+    }, 0).toFixed(2);
   };
+
+  const groupSessions = (sessions: Session[]): GroupedSessions => {
+    return sessions.reduce((groups: GroupedSessions, session) => {
+      const monthKey = format(new Date(session.startTime), 'MMMM yyyy');
+      const dayKey = format(new Date(session.startTime), 'yyyy-MM-dd');
+
+      if (!groups[monthKey]) {
+        groups[monthKey] = {};
+      }
+      if (!groups[monthKey][dayKey]) {
+        groups[monthKey][dayKey] = [];
+      }
+      groups[monthKey][dayKey].push(session);
+      return groups;
+    }, {});
+  };
+
+  const toggleMonth = (month: string) => {
+    const newOpenMonths = new Set(openMonths);
+    if (newOpenMonths.has(month)) {
+      newOpenMonths.delete(month);
+    } else {
+      newOpenMonths.add(month);
+    }
+    setOpenMonths(newOpenMonths);
+  };
+
+  const toggleDay = (day: string) => {
+    const newOpenDays = new Set(openDays);
+    if (newOpenDays.has(day)) {
+      newOpenDays.delete(day);
+    } else {
+      newOpenDays.add(day);
+    }
+    setOpenDays(newOpenDays);
+  };
+
+  const groupedSessions = groupSessions(sessions);
 
   return (
     <Card>
@@ -180,143 +208,173 @@ export default function SessionList({ sessions }: SessionListProps) {
       <CardContent>
         <div className="space-y-4">
           {Object.entries(groupedSessions)
-            .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
-            .map(([date, dateSessions]) => (
-              <Collapsible
-                key={date}
-                open={openDates.has(date)}
-                onOpenChange={() => toggleDate(date)}
-              >
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      {openDates.has(date) ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                      <span className="font-medium">
-                        {format(new Date(date), 'MMMM d, yyyy')}
+            .sort(([monthA], [monthB]) => new Date(monthB).getTime() - new Date(monthA).getTime())
+            .map(([month, days]) => {
+              const monthSessions = Object.values(days).flat();
+              return (
+                <Collapsible
+                  key={month}
+                  open={openMonths.has(month)}
+                  onOpenChange={() => toggleMonth(month)}
+                >
+                  <CollapsibleTrigger className="w-full">
+                    <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors">
+                      <div className="flex items-center gap-2">
+                        {openMonths.has(month) ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                        <span className="font-medium">{month}</span>
+                      </div>
+                      <span className="font-medium text-primary">
+                        {currencies["PLN"].symbol}{calculateMonthEarnings(monthSessions)}
                       </span>
                     </div>
-                    <span className="font-medium text-primary">
-                      {currencies["PLN"].symbol}{calculateDayEarnings(dateSessions)}
-                    </span>
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="space-y-2 mt-2 ml-6">
-                    {dateSessions.map((session) => (
-                      <div
-                        key={session.id}
-                        className="flex items-center justify-between p-4 rounded-lg border bg-background/50"
-                      >
-                        {editingSessionId === session.id && editingValues ? (
-                          <div className="flex-1 space-y-4">
-                            <div className="w-full">
-                              <JobSelector 
-                                value={editingValues.jobName} 
-                                onValueChange={(value) => setEditingValues({
-                                  ...editingValues,
-                                  jobName: value
-                                })} 
-                              />
-                            </div>
-                            <div className="flex gap-2 items-center">
-                              <Input
-                                type="number"
-                                value={editingValues.rate}
-                                onChange={(e) => setEditingValues({
-                                  ...editingValues,
-                                  rate: parseInt(e.target.value)
-                                })}
-                                min="1"
-                                className="w-24"
-                              />
-                              <span className="text-sm text-muted-foreground">PLN/hr</span>
-                            </div>
-                            <div className="flex gap-2">
-                              <Input
-                                type="time"
-                                value={editingValues.startTime}
-                                onChange={(e) => setEditingValues({
-                                  ...editingValues,
-                                  startTime: e.target.value
-                                })}
-                                className="w-32"
-                              />
-                              <span className="text-sm text-muted-foreground">to</span>
-                              <Input
-                                type="time"
-                                value={editingValues.endTime}
-                                onChange={(e) => setEditingValues({
-                                  ...editingValues,
-                                  endTime: e.target.value
-                                })}
-                                className="w-32"
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="font-medium">
-                              {session.jobName || "Untitled Job"}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Rate: {currencies["PLN"].symbol}{session.rate}/hr
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(session.startTime), "HH:mm:ss")} -{" "}
-                              {session.endTime
-                                ? format(new Date(session.endTime), "HH:mm:ss")
-                                : "Ongoing"}
-                            </p>
-                            <p className="text-sm font-medium">
-                              {currencies["PLN"].symbol}{calculateEarnings(session)} ({formatDuration(session)})
-                            </p>
-                          </div>
-                        )}
-                        <div className="flex gap-2 ml-4 relative z-50">
-                          {editingSessionId === session.id ? (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => saveEditing(session)}
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={cancelEditing}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => startEditing(session)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => deleteSession.mutate(session.id)}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="space-y-2 mt-2 ml-6">
+                      {Object.entries(days)
+                        .sort(([dayA], [dayB]) => new Date(dayB).getTime() - new Date(dayA).getTime())
+                        .map(([day, daySessions]) => (
+                          <Collapsible
+                            key={day}
+                            open={openDays.has(day)}
+                            onOpenChange={() => toggleDay(day)}
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
+                            <CollapsibleTrigger className="w-full">
+                              <div className="flex items-center justify-between p-2 rounded-lg border hover:bg-accent/50 transition-colors">
+                                <div className="flex items-center gap-2">
+                                  {openDays.has(day) ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                  )}
+                                  <span>{format(new Date(day), 'MMMM d, yyyy')}</span>
+                                </div>
+                                <span className="font-medium">
+                                  {currencies["PLN"].symbol}{calculateDayEarnings(daySessions)}
+                                </span>
+                              </div>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="space-y-2 mt-2 ml-6">
+                                {daySessions.map((session) => (
+                                  <div
+                                    key={session.id}
+                                    className="flex items-center justify-between p-4 rounded-lg border bg-background/50"
+                                  >
+                                    {editingSessionId === session.id && editingValues ? (
+                                      <div className="flex-1 space-y-4">
+                                        <div className="w-full">
+                                          <JobSelector 
+                                            value={editingValues.jobName} 
+                                            onValueChange={(value) => setEditingValues({
+                                              ...editingValues,
+                                              jobName: value
+                                            })} 
+                                          />
+                                        </div>
+                                        <div className="flex gap-2 items-center">
+                                          <Input
+                                            type="number"
+                                            value={editingValues.rate}
+                                            onChange={(e) => setEditingValues({
+                                              ...editingValues,
+                                              rate: parseInt(e.target.value)
+                                            })}
+                                            min="1"
+                                            className="w-24"
+                                          />
+                                          <span className="text-sm text-muted-foreground">PLN/hr</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <Input
+                                            type="time"
+                                            value={editingValues.startTime}
+                                            onChange={(e) => setEditingValues({
+                                              ...editingValues,
+                                              startTime: e.target.value
+                                            })}
+                                            className="w-32"
+                                          />
+                                          <span className="text-sm text-muted-foreground">to</span>
+                                          <Input
+                                            type="time"
+                                            value={editingValues.endTime}
+                                            onChange={(e) => setEditingValues({
+                                              ...editingValues,
+                                              endTime: e.target.value
+                                            })}
+                                            className="w-32"
+                                          />
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        <p className="font-medium">
+                                          {session.jobName || "Untitled Job"}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                          Rate: {currencies["PLN"].symbol}{session.rate}/hr
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                          {format(new Date(session.startTime), "HH:mm:ss")} -{" "}
+                                          {session.endTime
+                                            ? format(new Date(session.endTime), "HH:mm:ss")
+                                            : "Ongoing"}
+                                        </p>
+                                        <p className="text-sm font-medium">
+                                          {currencies["PLN"].symbol}{calculateEarnings(session)} ({formatDuration(session)})
+                                        </p>
+                                      </div>
+                                    )}
+                                    <div className="flex gap-2 ml-4 relative z-50">
+                                      {editingSessionId === session.id ? (
+                                        <>
+                                          <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => saveEditing(session)}
+                                          >
+                                            <Check className="h-4 w-4" />
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={cancelEditing}
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </Button>
+                                        </>
+                                      ) : (
+                                        <Button
+                                          variant="outline"
+                                          size="icon"
+                                          onClick={() => startEditing(session)}
+                                        >
+                                          <Pencil className="h-4 w-4" />
+                                        </Button>
+                                      )}
+                                      <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        onClick={() => deleteSession.mutate(session.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
         </div>
       </CardContent>
     </Card>
