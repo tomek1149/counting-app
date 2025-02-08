@@ -97,10 +97,10 @@ export default function ScheduleForm() {
     .filter((session: Session) => session.isScheduled)
     .map((session: Session) => new Date(session.startTime));
 
-  // Function to check if a date has a scheduled session
-  const hasScheduledSession = (date: Date) => {
-    return scheduledDates.some((scheduledDate: Date) => isSameDay(scheduledDate, date));
-  };
+  // Get all dates that have historical sessions
+  const historicalDates = sessions
+    .filter((session: Session) => !session.isScheduled)
+    .map((session: Session) => new Date(session.startTime));
 
   return (
     <Form {...form}>
@@ -162,20 +162,34 @@ export default function ScheduleForm() {
               <FormItem>
                 <FormLabel>Select Dates</FormLabel>
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="secondary" className="bg-primary/20">●</Badge>
-                    <span className="text-sm text-muted-foreground">Scheduled sessions</span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="bg-primary/20">●</Badge>
+                      <span className="text-sm text-muted-foreground">Scheduled sessions</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="bg-accent">●</Badge>
+                      <span className="text-sm text-muted-foreground">Historical sessions</span>
+                    </div>
                   </div>
                   <Calendar
                     mode="multiple"
                     selected={field.value}
                     onSelect={field.onChange}
                     disabled={(date) => date < new Date()}
-                    modifiers={{ scheduled: scheduledDates }}
+                    modifiers={{
+                      scheduled: scheduledDates,
+                      historical: historicalDates
+                    }}
                     modifiersStyles={{
                       scheduled: {
                         backgroundColor: "hsl(var(--primary) / 0.2)",
                         borderRadius: "4px",
+                      },
+                      historical: {
+                        backgroundColor: "hsl(var(--accent))",
+                        borderRadius: "4px",
+                        color: "hsl(var(--accent-foreground))"
                       }
                     }}
                     className="rounded-md border"

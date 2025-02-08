@@ -51,6 +51,11 @@ export default function HistoricalTracking() {
     .filter((session: Session) => session.isScheduled)
     .map((session: Session) => new Date(session.startTime));
 
+  // Get all dates that have historical sessions (non-scheduled)
+  const historicalDates = sessions
+    .filter((session: Session) => !session.isScheduled)
+    .map((session: Session) => new Date(session.startTime));
+
   const form = useForm<HistoricalSessionFormValues>({
     resolver: zodResolver(historicalSessionSchema),
     defaultValues: {
@@ -132,9 +137,15 @@ export default function HistoricalTracking() {
                     <FormItem>
                       <FormLabel>Date</FormLabel>
                       <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="secondary" className="bg-primary/20">●</Badge>
-                          <span className="text-sm text-muted-foreground">Scheduled sessions</span>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="bg-primary/20">●</Badge>
+                            <span className="text-sm text-muted-foreground">Scheduled sessions</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="bg-accent">●</Badge>
+                            <span className="text-sm text-muted-foreground">Historical sessions</span>
+                          </div>
                         </div>
                         <Calendar
                           mode="single"
@@ -144,11 +155,19 @@ export default function HistoricalTracking() {
                             setSelectedDate(date);
                           }}
                           disabled={(date) => date > new Date()}
-                          modifiers={{ scheduled: scheduledDates }}
+                          modifiers={{
+                            scheduled: scheduledDates,
+                            historical: historicalDates
+                          }}
                           modifiersStyles={{
                             scheduled: {
                               backgroundColor: "hsl(var(--primary) / 0.2)",
                               borderRadius: "4px",
+                            },
+                            historical: {
+                              backgroundColor: "hsl(var(--accent))",
+                              borderRadius: "4px",
+                              color: "hsl(var(--accent-foreground))"
                             }
                           }}
                           className="rounded-md border"
