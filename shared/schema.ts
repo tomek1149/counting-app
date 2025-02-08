@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export const sessions = pgTable("sessions", {
   id: serial("id").primaryKey(),
+  jobName: text("job_name").notNull().default(""),
   rate: integer("rate").notNull(),
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time"),
@@ -14,6 +15,7 @@ export const sessions = pgTable("sessions", {
 
 export const insertSessionSchema = createInsertSchema(sessions)
   .pick({
+    jobName: true,
     rate: true,
     startTime: true,
     endTime: true,
@@ -22,6 +24,7 @@ export const insertSessionSchema = createInsertSchema(sessions)
     repeatDays: true,
   })
   .extend({
+    jobName: z.string().default(""),
     rate: z.number().min(1, "Rate must be greater than 0"),
     startTime: z.string().transform((str) => new Date(str)),
     endTime: z.string().transform((str) => new Date(str)).nullable().optional(),

@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 const workingHoursSchema = z.object({
   startTime: z.string(),
   endTime: z.string(),
+  jobName: z.string().default(""),
 }).refine((data) => {
   const start = new Date(`1970-01-01T${data.startTime}`);
   const end = new Date(`1970-01-01T${data.endTime}`);
@@ -32,6 +33,7 @@ export default function WorkingHoursForm() {
     defaultValues: {
       startTime: "09:00",
       endTime: "17:00",
+      jobName: "",
     },
   });
 
@@ -46,7 +48,7 @@ export default function WorkingHoursForm() {
   }, [form]);
 
   const createWorkingHoursSession = useMutation({
-    mutationFn: async (data: { startTime: Date; endTime: Date; rate: number }) => {
+    mutationFn: async (data: { startTime: Date; endTime: Date; rate: number; jobName: string }) => {
       const res = await apiRequest("POST", "/api/sessions", {
         ...data,
         startTime: data.startTime.toISOString(),
@@ -93,6 +95,7 @@ export default function WorkingHoursForm() {
 
     const startTimeStr = form.getValues("startTime");
     const endTimeStr = form.getValues("endTime");
+    const jobName = form.getValues("jobName");
 
     const today = new Date();
     const startTime = new Date(today);
@@ -104,13 +107,30 @@ export default function WorkingHoursForm() {
     startTime.setHours(startHours, startMinutes, 0, 0);
     endTime.setHours(endHours, endMinutes, 0, 0);
 
-    createWorkingHoursSession.mutate({ startTime, endTime, rate });
+    createWorkingHoursSession.mutate({ startTime, endTime, rate, jobName });
   };
 
   return (
     <div className="space-y-4">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="jobName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Job Name</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="text"
+                    placeholder="Enter job name"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <div className="flex gap-4">
             <FormField
               control={form.control}

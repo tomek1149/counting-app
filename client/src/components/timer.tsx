@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Play, Pause } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -9,6 +10,7 @@ import type { Session } from "@shared/schema";
 export default function Timer() {
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState<Date | null>(null);
+  const [jobName, setJobName] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -50,6 +52,7 @@ export default function Timer() {
       try {
         await createSession.mutateAsync({
           rate,
+          jobName,
           startTime: now.toISOString(),
           isActive: true,
         });
@@ -88,15 +91,26 @@ export default function Timer() {
   };
 
   return (
-    <div className="flex items-center justify-center">
-      <Button
-        size="lg"
-        onClick={toggleTimer}
-        className={isRunning ? "bg-destructive hover:bg-destructive/90" : ""}
-      >
-        {isRunning ? <Pause className="mr-2" /> : <Play className="mr-2" />}
-        {isRunning ? "Stop" : "Start"} Timer
-      </Button>
+    <div className="space-y-4">
+      <div className="flex gap-4 items-end">
+        <div className="flex-1">
+          <Input
+            type="text"
+            placeholder="Enter job name"
+            value={jobName}
+            onChange={(e) => setJobName(e.target.value)}
+            disabled={isRunning}
+          />
+        </div>
+        <Button
+          size="lg"
+          onClick={toggleTimer}
+          className={isRunning ? "bg-destructive hover:bg-destructive/90" : ""}
+        >
+          {isRunning ? <Pause className="mr-2" /> : <Play className="mr-2" />}
+          {isRunning ? "Stop" : "Start"} Timer
+        </Button>
+      </div>
     </div>
   );
 }

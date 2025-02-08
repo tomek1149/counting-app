@@ -18,6 +18,7 @@ const scheduleSchema = z.object({
   endTime: z.string(),
   selectedDates: z.array(z.date()).min(1, "Select at least one date"),
   rate: z.number().min(1, "Rate must be greater than 0"),
+  jobName: z.string().default(""),
 }).refine((data) => {
   const start = new Date(`1970-01-01T${data.startTime}`);
   const end = new Date(`1970-01-01T${data.endTime}`);
@@ -46,6 +47,7 @@ export default function ScheduleForm() {
       endTime: "17:00",
       selectedDates: [],
       rate: parseInt(localStorage.getItem("hourlyRate") || "0"),
+      jobName: "",
     },
   });
 
@@ -64,6 +66,7 @@ export default function ScheduleForm() {
 
         await apiRequest("POST", "/api/sessions", {
           rate: data.rate,
+          jobName: data.jobName,
           startTime: sessionStartTime.toISOString(),
           endTime: sessionEndTime.toISOString(),
           isActive: false,
@@ -107,6 +110,23 @@ export default function ScheduleForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="jobName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Job Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Enter job name"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="rate"

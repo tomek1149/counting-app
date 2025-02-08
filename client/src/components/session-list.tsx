@@ -42,7 +42,7 @@ export default function SessionList({ sessions }: SessionListProps) {
 
   const formatDuration = (session: Session) => {
     const start = new Date(session.startTime);
-    const end = session.endTime ? new Date(session.endTime) : 
+    const end = session.endTime ? new Date(session.endTime) :
                session.isActive ? new Date() : new Date(session.startTime);
     const totalMilliseconds = end.getTime() - start.getTime();
 
@@ -55,7 +55,7 @@ export default function SessionList({ sessions }: SessionListProps) {
 
   const calculateEarnings = (session: Session) => {
     const start = new Date(session.startTime);
-    const end = session.endTime ? new Date(session.endTime) : 
+    const end = session.endTime ? new Date(session.endTime) :
                session.isActive ? new Date() : new Date(session.startTime);
     const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
     // Calculate earnings directly in PLN without currency conversion
@@ -130,6 +130,9 @@ export default function SessionList({ sessions }: SessionListProps) {
                       >
                         <div>
                           <p className="font-medium">
+                            {session.jobName ? session.jobName : "Untitled Job"}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
                             Rate: {currencies["PLN"].symbol}{session.rate}/hr
                           </p>
                           <p className="text-sm text-muted-foreground">

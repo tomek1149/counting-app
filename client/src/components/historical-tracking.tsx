@@ -20,6 +20,7 @@ const historicalSessionSchema = z.object({
   startTime: z.string(),
   endTime: z.string(),
   rate: z.number().min(1, "Rate must be greater than 0"),
+  jobName: z.string().default(""),
 }).refine((data) => {
   const start = new Date(`1970-01-01T${data.startTime}`);
   const end = new Date(`1970-01-01T${data.endTime}`);
@@ -63,11 +64,12 @@ export default function HistoricalTracking() {
       startTime: "09:00",
       endTime: "17:00",
       rate: parseInt(localStorage.getItem("hourlyRate") || "0"),
+      jobName: "",
     },
   });
 
   const createHistoricalSession = useMutation({
-    mutationFn: async (data: { startTime: Date; endTime: Date; rate: number }) => {
+    mutationFn: async (data: { startTime: Date; endTime: Date; rate: number; jobName: string }) => {
       const res = await apiRequest("POST", "/api/sessions", {
         ...data,
         startTime: data.startTime.toISOString(),
@@ -107,6 +109,7 @@ export default function HistoricalTracking() {
       startTime,
       endTime,
       rate: formData.rate,
+      jobName: formData.jobName,
     });
   };
 
@@ -184,6 +187,9 @@ export default function HistoricalTracking() {
                                   className="p-3 rounded-md border bg-background/50"
                                 >
                                   <p className="font-medium">
+                                    {session.jobName ? session.jobName : "Untitled Job"}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
                                     Rate: {currencies["PLN"].symbol}{session.rate}/hr
                                   </p>
                                   <p className="text-sm text-muted-foreground">
@@ -208,6 +214,23 @@ export default function HistoricalTracking() {
               <div className="flex-1 space-y-4">
                 <FormField
                   control={form.control}
+                  name="jobName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Job Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="Enter job name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name="rate"
                   render={({ field }) => (
                     <FormItem>
@@ -224,7 +247,6 @@ export default function HistoricalTracking() {
                     </FormItem>
                   )}
                 />
-
                 <div className="flex gap-4">
                   <FormField
                     control={form.control}
