@@ -26,29 +26,20 @@ export const sessions = pgTable("sessions", {
   userId: integer("user_id").references(() => users.id),
 });
 
-// Updated validation rules for user registration
-export const insertUserSchema = createInsertSchema(users)
-  .extend({
-    email: z.string()
-      .min(1, "Email is required")
-      .email("Please enter a valid email address"),
-    password: z.string()
-      .min(6, "Password must be at least 6 characters")
-      .max(100, "Password is too long"),
-    confirmPassword: z.string()
-      .min(1, "Please confirm your password"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
+// User registration schema
+export const insertUserSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
+// Login schema
 export const loginSchema = z.object({
-  email: z.string()
-    .min(1, "Email is required")
-    .email("Please enter a valid email address"),
-  password: z.string()
-    .min(1, "Password is required"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
 export const insertPredefinedJobSchema = createInsertSchema(predefinedJobs)
