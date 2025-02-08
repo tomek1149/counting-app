@@ -171,6 +171,7 @@ export default function HistoricalTracking() {
                             }
                           }}
                           className="rounded-md border"
+                          weekStartsOn={1}
                         />
                         <FormMessage />
                         {selectedDateSessions.length > 0 && (

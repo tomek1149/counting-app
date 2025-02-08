@@ -193,10 +193,11 @@ export default function ScheduleForm() {
                       }
                     }}
                     className="rounded-md border"
+                    weekStartsOn={1}
                   />
                   {field.value?.length > 0 && (
                     <div className="text-sm text-muted-foreground">
-                      Selected dates: {field.value.map(date => 
+                      Selected dates: {field.value.map(date =>
                         format(date, 'MMM d, yyyy')
                       ).join(', ')}
                     </div>
