@@ -28,18 +28,19 @@ export function setupAuth(app: Express) {
     try {
       const userData = insertUserSchema.parse(req.body);
       const existingUser = await storage.getUserByEmail(userData.email);
-      
+
       if (existingUser) {
         return res.status(400).json({ error: "Email already registered" });
       }
 
       const user = await storage.createUser(userData);
       req.session.userId = user.id;
-      
+
       // Return user without password
       const { password, ...userWithoutPassword } = user;
       res.status(201).json(userWithoutPassword);
     } catch (error) {
+      console.error("Registration error:", error);
       if (error instanceof Error) {
         res.status(400).json({ error: error.message });
       } else {
@@ -53,17 +54,18 @@ export function setupAuth(app: Express) {
     try {
       const credentials = loginSchema.parse(req.body);
       const user = await storage.validateUser(credentials.email, credentials.password);
-      
+
       if (!user) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
       req.session.userId = user.id;
-      
+
       // Return user without password
       const { password, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
     } catch (error) {
+      console.error("Login error:", error);
       if (error instanceof Error) {
         res.status(400).json({ error: error.message });
       } else {

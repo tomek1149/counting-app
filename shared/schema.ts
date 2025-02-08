@@ -22,13 +22,14 @@ export const sessions = pgTable("sessions", {
   endTime: timestamp("end_time"),
   isActive: boolean("is_active").notNull().default(true),
   isScheduled: boolean("is_scheduled").notNull().default(false),
-  repeatDays: text("repeat_days").array(), // Store days of the week for repeating sessions
+  repeatDays: text("repeat_days").array(),
   userId: integer("user_id").references(() => users.id),
 });
 
+// Fixed validation rules for user registration
 export const insertUserSchema = createInsertSchema(users)
   .extend({
-    email: z.string().email("Invalid email address"),
+    email: z.string().email(),  // Simplified email validation
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
   })
@@ -45,7 +46,7 @@ export const loginSchema = z.object({
 export const insertPredefinedJobSchema = createInsertSchema(predefinedJobs)
   .pick({
     name: true,
-    userId:true
+    userId: true
   });
 
 export const insertSessionSchema = createInsertSchema(sessions)

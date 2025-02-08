@@ -44,6 +44,7 @@ export default function AuthPage() {
       setLocation("/");
     } catch (error) {
       // Error is handled by the mutation
+      console.error('Login error:', error);
     }
   };
 
@@ -53,6 +54,7 @@ export default function AuthPage() {
       setLocation("/");
     } catch (error) {
       // Error is handled by the mutation
+      console.error('Registration error:', error);
     }
   };
 
@@ -79,7 +81,11 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input type="email" {...field} />
+                          <Input 
+                            type="email" 
+                            placeholder="your@email.com"
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -92,7 +98,11 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input type="password" {...field} />
+                          <Input 
+                            type="password"
+                            placeholder="••••••"
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -113,7 +123,11 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input type="email" {...field} />
+                          <Input 
+                            type="email"
+                            placeholder="your@email.com"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -126,7 +140,11 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input type="password" {...field} />
+                          <Input 
+                            type="password"
+                            placeholder="Min. 6 characters"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -139,7 +157,11 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Confirm Password</FormLabel>
                         <FormControl>
-                          <Input type="password" {...field} />
+                          <Input 
+                            type="password"
+                            placeholder="Re-enter password"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
