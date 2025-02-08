@@ -27,6 +27,7 @@ export default function AuthPage() {
       email: "",
       password: "",
     },
+    mode: "onBlur", // Validate on blur for better UX
   });
 
   const registerForm = useForm<InsertUser>({
@@ -36,6 +37,7 @@ export default function AuthPage() {
       password: "",
       confirmPassword: "",
     },
+    mode: "onBlur", // Validate on blur for better UX
   });
 
   const onLogin = async (data: LoginCredentials) => {
@@ -85,6 +87,7 @@ export default function AuthPage() {
                             type="email" 
                             placeholder="your@email.com"
                             {...field} 
+                            aria-describedby="email-error"
                           />
                         </FormControl>
                         <FormMessage />
@@ -102,14 +105,19 @@ export default function AuthPage() {
                             type="password"
                             placeholder="••••••"
                             {...field} 
+                            aria-describedby="password-error"
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full">
-                    Login
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={loginForm.formState.isSubmitting}
+                  >
+                    {loginForm.formState.isSubmitting ? "Logging in..." : "Login"}
                   </Button>
                 </form>
               </Form>
@@ -127,6 +135,7 @@ export default function AuthPage() {
                             type="email"
                             placeholder="your@email.com"
                             {...field}
+                            aria-describedby="email-error"
                           />
                         </FormControl>
                         <FormMessage />
@@ -144,6 +153,7 @@ export default function AuthPage() {
                             type="password"
                             placeholder="Min. 6 characters"
                             {...field}
+                            aria-describedby="password-error"
                           />
                         </FormControl>
                         <FormMessage />
@@ -161,14 +171,19 @@ export default function AuthPage() {
                             type="password"
                             placeholder="Re-enter password"
                             {...field}
+                            aria-describedby="confirm-password-error"
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full">
-                    Register
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={registerForm.formState.isSubmitting}
+                  >
+                    {registerForm.formState.isSubmitting ? "Creating account..." : "Register"}
                   </Button>
                 </form>
               </Form>
