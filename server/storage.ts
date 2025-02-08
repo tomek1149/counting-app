@@ -1,4 +1,21 @@
-import { sessions, predefinedJobs, type Session, type InsertSession, type PredefinedJob, type InsertPredefinedJob } from "@shared/schema";
+import { sessions, predefinedJobs, users, type Session, type InsertSession, type PredefinedJob, type InsertPredefinedJob, type User, type InsertUser } from "@shared/schema";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
+
+async function comparePasswords(supplied: string, stored: string) {
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  return timingSafeEqual(hashedBuf, suppliedBuf);
+}
 
 export interface IStorage {
   getSessions(): Promise<Session[]>;
@@ -9,13 +26,19 @@ export interface IStorage {
   getPredefinedJobs(): Promise<PredefinedJob[]>;
   createPredefinedJob(job: InsertPredefinedJob): Promise<PredefinedJob>;
   deletePredefinedJob(id: number): Promise<void>;
+  createUser(user: InsertUser): Promise<User>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  getUser(id: number): Promise<User | undefined>;
+  validateUser(email: string, password: string): Promise<User | undefined>;
 }
 
 export class MemStorage implements IStorage {
   private sessions: Session[] = [];
   private predefinedJobs: PredefinedJob[] = [];
+  private users: User[] = [];
   private sessionId = 1;
   private jobId = 1;
+  private userId = 1;
 
   async getSessions(): Promise<Session[]> {
     return this.sessions;
@@ -71,6 +94,32 @@ export class MemStorage implements IStorage {
 
   async deletePredefinedJob(id: number): Promise<void> {
     this.predefinedJobs = this.predefinedJobs.filter(j => j.id !== id);
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const hashedPassword = await hashPassword(insertUser.password);
+    const user = {
+      id: this.userId++,
+      email: insertUser.email,
+      password: hashedPassword,
+    };
+    this.users.push(user);
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return this.users.find(u => u.email === email);
+  }
+
+  async getUser(id: number): Promise<User | undefined> {
+    return this.users.find(u => u.id === id);
+  }
+
+  async validateUser(email: string, password: string): Promise<User | undefined> {
+    const user = await this.getUserByEmail(email);
+    if (!user) return undefined;
+    const isValid = await comparePasswords(password, user.password);
+    return isValid ? user : undefined;
   }
 }
 
