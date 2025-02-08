@@ -16,7 +16,7 @@ interface SessionListProps {
 export default function SessionList({ sessions }: SessionListProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Update more frequently for smoother animation
+  // Update display frequently for smooth animation
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -37,7 +37,7 @@ export default function SessionList({ sessions }: SessionListProps) {
   const formatDuration = (session: Session) => {
     const start = new Date(session.startTime);
     const end = session.endTime ? new Date(session.endTime) : 
-               session.isActive ? currentTime : new Date(session.startTime);
+               session.isActive ? new Date() : new Date(session.startTime);
     const totalMilliseconds = end.getTime() - start.getTime();
 
     const hours = Math.floor(totalMilliseconds / (1000 * 60 * 60));
@@ -50,7 +50,7 @@ export default function SessionList({ sessions }: SessionListProps) {
   const calculateEarnings = (session: Session) => {
     const start = new Date(session.startTime);
     const end = session.endTime ? new Date(session.endTime) : 
-               session.isActive ? currentTime : new Date(session.startTime);
+               session.isActive ? new Date() : new Date(session.startTime);
     const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
     const earnings = hours * session.rate * currencies["PLN"].rate;
     return earnings.toFixed(3);

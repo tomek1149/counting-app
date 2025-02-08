@@ -14,7 +14,7 @@ export default function Summary({ sessions }: SummaryProps) {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 100); // Update more frequently for smoother animation
+    }, 100); // Keep 100ms for smooth animation
 
     return () => clearInterval(timer);
   }, []);
@@ -23,7 +23,7 @@ export default function Summary({ sessions }: SummaryProps) {
     const totalUSD = sessions.reduce((total, session) => {
       const start = new Date(session.startTime);
       const end = session.endTime ? new Date(session.endTime) : 
-                 session.isActive ? currentTime : new Date(session.startTime);
+                 session.isActive ? new Date() : new Date(session.startTime);
       const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
       return total + hours * session.rate;
     }, 0);
@@ -37,7 +37,7 @@ export default function Summary({ sessions }: SummaryProps) {
     const totalMilliseconds = sessions.reduce((total, session) => {
       const start = new Date(session.startTime);
       const end = session.endTime ? new Date(session.endTime) : 
-                 session.isActive ? currentTime : new Date(session.startTime);
+                 session.isActive ? new Date() : new Date(session.startTime);
       return total + (end.getTime() - start.getTime());
     }, 0);
 
