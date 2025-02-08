@@ -7,6 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import React, { useState, useEffect } from "react";
+import { currencies } from "./currency-selector";
 
 interface SessionListProps {
   sessions: Session[];
@@ -51,8 +52,6 @@ export default function SessionList({ sessions }: SessionListProps) {
     const end = session.endTime ? new Date(session.endTime) : 
                session.isActive ? currentTime : new Date(session.startTime);
     const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    // Placeholder -  currencies["PLN"] is undefined.  Needs definition elsewhere.
-    const currencies = {PLN: {rate: 1, symbol: "zł"}}; //Example, needs proper definition
     const earnings = hours * session.rate * currencies["PLN"].rate;
     return earnings.toFixed(3);
   };
