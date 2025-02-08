@@ -12,14 +12,8 @@ import type { InsertUser, LoginCredentials } from "@shared/schema";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const { login, register, user } = useAuth();
+  const { login, register: registerUser } = useAuth();
   const [, setLocation] = useLocation();
-
-  // Redirect if already logged in
-  if (user) {
-    setLocation("/");
-    return null;
-  }
 
   const loginForm = useForm<LoginCredentials>({
     resolver: zodResolver(loginSchema),
@@ -48,8 +42,9 @@ export default function AuthPage() {
   };
 
   const onRegister = async (data: InsertUser) => {
+    console.log('Register data:', data);
     try {
-      await register(data);
+      await registerUser(data);
       setLocation("/");
     } catch (error) {
       console.error('Registration error:', error);
@@ -128,7 +123,10 @@ export default function AuthPage() {
                           <Input
                             type="email"
                             placeholder="your@email.com"
-                            {...field}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                           />
                         </FormControl>
                         <FormMessage />
@@ -145,7 +143,10 @@ export default function AuthPage() {
                           <Input
                             type="password"
                             placeholder="Min. 6 characters"
-                            {...field}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                           />
                         </FormControl>
                         <FormMessage />
@@ -162,7 +163,10 @@ export default function AuthPage() {
                           <Input
                             type="password"
                             placeholder="Re-enter password"
-                            {...field}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                           />
                         </FormControl>
                         <FormMessage />
@@ -184,9 +188,11 @@ export default function AuthPage() {
                 variant="link"
                 onClick={() => {
                   setIsLogin(!isLogin);
-                  // Reset both forms when switching
-                  loginForm.reset();
-                  registerForm.reset();
+                  if (isLogin) {
+                    registerForm.reset();
+                  } else {
+                    loginForm.reset();
+                  }
                 }}
                 className="text-sm text-muted-foreground"
               >
