@@ -6,6 +6,7 @@ export const currencies = {
   GBP: { symbol: "£", rate: 0.79 },
   JPY: { symbol: "¥", rate: 149.35 },
   AUD: { symbol: "A$", rate: 1.53 },
+  PLN: { symbol: "zł", rate: 4.02 },
 };
 
 export type CurrencyCode = keyof typeof currencies;
