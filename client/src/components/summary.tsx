@@ -9,9 +9,8 @@ interface SummaryProps {
 
 export default function Summary({ sessions }: SummaryProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [currency, setCurrency] = useState<CurrencyCode>("USD");
+  const [currency, setCurrency] = useState<CurrencyCode>("PLN");
 
-  // Update current time every second to recalculate earnings for active sessions
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -31,17 +30,22 @@ export default function Summary({ sessions }: SummaryProps) {
 
     // Convert to selected currency
     const convertedAmount = totalUSD * currencies[currency].rate;
-    return convertedAmount.toFixed(2);
+    return convertedAmount.toFixed(3);
   };
 
   const calculateTotalHours = () => {
-    return sessions.reduce((total, session) => {
+    const totalMilliseconds = sessions.reduce((total, session) => {
       const start = new Date(session.startTime);
       const end = session.endTime ? new Date(session.endTime) : 
                  session.isActive ? currentTime : new Date(session.startTime);
-      const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-      return total + hours;
-    }, 0).toFixed(2);
+      return total + (end.getTime() - start.getTime());
+    }, 0);
+
+    const hours = Math.floor(totalMilliseconds / (1000 * 60 * 60));
+    const minutes = Math.floor((totalMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((totalMilliseconds % (1000 * 60)) / 1000);
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (

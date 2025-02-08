@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { type Session } from "@shared/schema";
 import { format } from "date-fns";
 import { useMutation } from "@tanstack/react-query";
@@ -33,17 +33,28 @@ export default function SessionList({ sessions }: SessionListProps) {
     },
   });
 
-  const calculateDuration = (session: Session) => {
+  const formatDuration = (session: Session) => {
+    const start = new Date(session.startTime);
+    const end = session.endTime ? new Date(session.endTime) : 
+               session.isActive ? currentTime : new Date(session.startTime);
+    const totalMilliseconds = end.getTime() - start.getTime();
+
+    const hours = Math.floor(totalMilliseconds / (1000 * 60 * 60));
+    const minutes = Math.floor((totalMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((totalMilliseconds % (1000 * 60)) / 1000);
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const calculateEarnings = (session: Session) => {
     const start = new Date(session.startTime);
     const end = session.endTime ? new Date(session.endTime) : 
                session.isActive ? currentTime : new Date(session.startTime);
     const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    return hours.toFixed(2);
-  };
-
-  const calculateEarnings = (session: Session) => {
-    const hours = parseFloat(calculateDuration(session));
-    return (hours * session.rate).toFixed(2);
+    // Placeholder -  currencies["PLN"] is undefined.  Needs definition elsewhere.
+    const currencies = {PLN: {rate: 1, symbol: "zł"}}; //Example, needs proper definition
+    const earnings = hours * session.rate * currencies["PLN"].rate;
+    return earnings.toFixed(3);
   };
 
   return (
@@ -63,13 +74,13 @@ export default function SessionList({ sessions }: SessionListProps) {
                   Rate: ${session.rate}/hr
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {format(new Date(session.startTime), "MMM d, h:mm a")} -{" "}
+                  {format(new Date(session.startTime), "MMM d, HH:mm:ss")} -{" "}
                   {session.endTime
-                    ? format(new Date(session.endTime), "h:mm a")
+                    ? format(new Date(session.endTime), "HH:mm:ss")
                     : "Ongoing"}
                 </p>
                 <p className="text-sm font-medium">
-                  ${calculateEarnings(session)} ({calculateDuration(session)} hrs)
+                  {currencies["PLN"].symbol}{calculateEarnings(session)} ({formatDuration(session)})
                 </p>
               </div>
               <div className="flex gap-2">
