@@ -4,14 +4,14 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/contexts/language-context";
 import type { Session } from "@shared/schema";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 const scheduleSchema = z.object({
   startTime: z.string(),
@@ -34,13 +34,18 @@ export default function ScheduleForm() {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
 
+  // Get all sessions to check scheduled dates
+  const { data: sessions = [] } = useQuery<Session[]>({
+    queryKey: ["/api/sessions"],
+  });
+
   const form = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleSchema),
     defaultValues: {
       startTime: "09:00",
       endTime: "17:00",
       selectedDates: [],
-      rate: 0,
+      rate: parseInt(localStorage.getItem("hourlyRate") || "0"),
     },
   });
 
@@ -74,7 +79,7 @@ export default function ScheduleForm() {
       });
       form.reset(form.getValues()); // Reset form but keep values
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: t('common', 'error'),
         description: error.message || "Failed to create schedule",
@@ -85,6 +90,16 @@ export default function ScheduleForm() {
 
   const onSubmit = (data: ScheduleFormValues) => {
     createSchedule.mutate(data);
+  };
+
+  // Get all dates that have scheduled sessions
+  const scheduledDates = sessions
+    .filter((session: Session) => session.isScheduled)
+    .map((session: Session) => new Date(session.startTime));
+
+  // Function to check if a date has a scheduled session
+  const hasScheduledSession = (date: Date) => {
+    return scheduledDates.some((scheduledDate: Date) => isSameDay(scheduledDate, date));
   };
 
   return (
@@ -147,11 +162,22 @@ export default function ScheduleForm() {
               <FormItem>
                 <FormLabel>Select Dates</FormLabel>
                 <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="secondary" className="bg-primary/20">●</Badge>
+                    <span className="text-sm text-muted-foreground">Scheduled sessions</span>
+                  </div>
                   <Calendar
                     mode="multiple"
                     selected={field.value}
                     onSelect={field.onChange}
                     disabled={(date) => date < new Date()}
+                    modifiers={{ scheduled: scheduledDates }}
+                    modifiersStyles={{
+                      scheduled: {
+                        backgroundColor: "hsl(var(--primary) / 0.2)",
+                        borderRadius: "4px",
+                      }
+                    }}
                     className="rounded-md border"
                   />
                   {field.value?.length > 0 && (
