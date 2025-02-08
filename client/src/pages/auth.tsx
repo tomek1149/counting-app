@@ -20,7 +20,7 @@ export default function AuthPage() {
     defaultValues: {
       email: "",
       password: "",
-    },
+    }
   });
 
   const registerForm = useForm<InsertUser>({
@@ -29,7 +29,7 @@ export default function AuthPage() {
       email: "",
       password: "",
       confirmPassword: "",
-    },
+    }
   });
 
   const onLogin = async (data: LoginCredentials) => {
@@ -42,7 +42,6 @@ export default function AuthPage() {
   };
 
   const onRegister = async (data: InsertUser) => {
-    console.log('Register data:', data);
     try {
       await registerUser(data);
       setLocation("/");
@@ -74,11 +73,7 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="your@email.com"
-                            {...field}
-                          />
+                          <Input type="email" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -91,21 +86,13 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="••••••"
-                            {...field}
-                          />
+                          <Input type="password" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={loginForm.formState.isSubmitting}
-                  >
+                  <Button type="submit" className="w-full">
                     {loginForm.formState.isSubmitting ? "Logging in..." : "Login"}
                   </Button>
                 </form>
@@ -120,14 +107,7 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="your@email.com"
-                            value={field.value}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                          />
+                          <Input type="email" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -140,14 +120,7 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="Min. 6 characters"
-                            value={field.value}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                          />
+                          <Input type="password" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -160,24 +133,13 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Confirm Password</FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="Re-enter password"
-                            value={field.value}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                          />
+                          <Input type="password" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={registerForm.formState.isSubmitting}
-                  >
+                  <Button type="submit" className="w-full">
                     {registerForm.formState.isSubmitting ? "Creating account..." : "Register"}
                   </Button>
                 </form>
@@ -196,9 +158,7 @@ export default function AuthPage() {
                 }}
                 className="text-sm text-muted-foreground"
               >
-                {isLogin
-                  ? "Don't have an account? Register"
-                  : "Already have an account? Login"}
+                {isLogin ? "Don't have an account? Register" : "Already have an account? Login"}
               </Button>
             </div>
           </CardContent>

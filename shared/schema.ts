@@ -26,7 +26,7 @@ export const sessions = pgTable("sessions", {
   userId: integer("user_id").references(() => users.id),
 });
 
-// User registration schema
+// User registration schema - simplified validation
 export const insertUserSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -36,10 +36,10 @@ export const insertUserSchema = z.object({
   path: ["confirmPassword"],
 });
 
-// Login schema
+// Login schema - simplified validation
 export const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
+  password: z.string(),
 });
 
 export const insertPredefinedJobSchema = createInsertSchema(predefinedJobs)
