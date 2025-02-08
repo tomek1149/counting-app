@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 const workingHoursSchema = z.object({
   startTime: z.string(),
@@ -23,6 +25,7 @@ type WorkingHoursFormValues = z.infer<typeof workingHoursSchema>;
 
 export default function WorkingHoursForm() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const form = useForm<WorkingHoursFormValues>({
     resolver: zodResolver(workingHoursSchema),
@@ -42,6 +45,32 @@ export default function WorkingHoursForm() {
     }
   }, [form]);
 
+  const createWorkingHoursSession = useMutation({
+    mutationFn: async (data: { startTime: Date; endTime: Date; rate: number }) => {
+      const res = await apiRequest("POST", "/api/sessions", {
+        ...data,
+        startTime: data.startTime.toISOString(),
+        endTime: data.endTime.toISOString(),
+        isActive: false,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
+      toast({
+        title: "Success",
+        description: "Created working hours session",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create working hours session",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: WorkingHoursFormValues) => {
     localStorage.setItem("workingHoursStart", data.startTime);
     localStorage.setItem("workingHoursEnd", data.endTime);
@@ -49,6 +78,33 @@ export default function WorkingHoursForm() {
       title: "Success",
       description: "Working hours updated",
     });
+  };
+
+  const startWorkingHoursTracking = () => {
+    const rate = parseInt(localStorage.getItem("hourlyRate") || "0");
+    if (rate <= 0) {
+      toast({
+        title: "Error",
+        description: "Please set an hourly rate first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const startTimeStr = form.getValues("startTime");
+    const endTimeStr = form.getValues("endTime");
+
+    const today = new Date();
+    const startTime = new Date(today);
+    const endTime = new Date(today);
+
+    const [startHours, startMinutes] = startTimeStr.split(":").map(Number);
+    const [endHours, endMinutes] = endTimeStr.split(":").map(Number);
+
+    startTime.setHours(startHours, startMinutes, 0, 0);
+    endTime.setHours(endHours, endMinutes, 0, 0);
+
+    createWorkingHoursSession.mutate({ startTime, endTime, rate });
   };
 
   return (
@@ -89,7 +145,16 @@ export default function WorkingHoursForm() {
               )}
             />
           </div>
-          <Button type="submit">Set Working Hours</Button>
+          <div className="flex gap-4">
+            <Button type="submit">Save Hours</Button>
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={startWorkingHoursTracking}
+            >
+              Create Today's Session
+            </Button>
+          </div>
         </form>
       </Form>
     </div>

@@ -1,29 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Session } from "@shared/schema";
-
-function getWorkingPeriodForToday(): { startTime: Date; endTime: Date } | null {
-  const startTimeStr = localStorage.getItem("workingHoursStart");
-  const endTimeStr = localStorage.getItem("workingHoursEnd");
-
-  if (!startTimeStr || !endTimeStr) return null;
-
-  const today = new Date();
-  const [startHours, startMinutes] = startTimeStr.split(":").map(Number);
-  const [endHours, endMinutes] = endTimeStr.split(":").map(Number);
-
-  const startTime = new Date(today);
-  startTime.setHours(startHours, startMinutes, 0, 0);
-
-  const endTime = new Date(today);
-  endTime.setHours(endHours, endMinutes, 0, 0);
-
-  return { startTime, endTime };
-}
 
 export default function Timer() {
   const [isRunning, setIsRunning] = useState(false);
@@ -62,36 +43,8 @@ export default function Timer() {
       return;
     }
 
-    const workingPeriod = getWorkingPeriodForToday();
-    if (!workingPeriod) {
-      toast({
-        title: "Error",
-        description: "Please set working hours first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const now = new Date();
-    if (now < workingPeriod.startTime) {
-      toast({
-        title: "Error",
-        description: "Working hours haven't started yet",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (now > workingPeriod.endTime) {
-      toast({
-        title: "Error",
-        description: "Working hours are over for today",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!isRunning) {
+      const now = new Date();
       setStartTime(now);
       setIsRunning(true);
       try {
@@ -116,11 +69,10 @@ export default function Timer() {
       });
       const activeSession = sessions.find((s) => s.isActive);
       if (activeSession) {
-        const endTime = now > workingPeriod.endTime ? workingPeriod.endTime : now;
         try {
           await updateSession.mutateAsync({
             id: activeSession.id,
-            endTime: endTime.toISOString(),
+            endTime: new Date().toISOString(),
             isActive: false,
           });
         } catch (error) {
