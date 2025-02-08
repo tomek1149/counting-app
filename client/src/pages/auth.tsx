@@ -27,7 +27,7 @@ export default function AuthPage() {
       email: "",
       password: "",
     },
-    mode: "onBlur", // Validate on blur for better UX
+    mode: "onBlur",
   });
 
   const registerForm = useForm<InsertUser>({
@@ -37,7 +37,7 @@ export default function AuthPage() {
       password: "",
       confirmPassword: "",
     },
-    mode: "onBlur", // Validate on blur for better UX
+    mode: "onBlur",
   });
 
   const onLogin = async (data: LoginCredentials) => {
@@ -45,7 +45,6 @@ export default function AuthPage() {
       await login(data);
       setLocation("/");
     } catch (error) {
-      // Error is handled by the mutation
       console.error('Login error:', error);
     }
   };
@@ -55,7 +54,6 @@ export default function AuthPage() {
       await register(data);
       setLocation("/");
     } catch (error) {
-      // Error is handled by the mutation
       console.error('Registration error:', error);
     }
   };
@@ -75,22 +73,23 @@ export default function AuthPage() {
           <CardContent>
             {isLogin ? (
               <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+                <form id="login-form" onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                   <FormField
                     control={loginForm.control}
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel htmlFor="login-email">Email</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="email" 
+                          <Input
+                            id="login-email"
+                            type="email"
                             placeholder="your@email.com"
-                            {...field} 
-                            aria-describedby="email-error"
+                            {...field}
+                            aria-describedby="login-email-error"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage id="login-email-error" />
                       </FormItem>
                     )}
                   />
@@ -99,21 +98,22 @@ export default function AuthPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel htmlFor="login-password">Password</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
+                            id="login-password"
                             type="password"
                             placeholder="••••••"
-                            {...field} 
-                            aria-describedby="password-error"
+                            {...field}
+                            aria-describedby="login-password-error"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage id="login-password-error" />
                       </FormItem>
                     )}
                   />
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full"
                     disabled={loginForm.formState.isSubmitting}
                   >
@@ -123,22 +123,23 @@ export default function AuthPage() {
               </Form>
             ) : (
               <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
+                <form id="register-form" onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
                   <FormField
                     control={registerForm.control}
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel htmlFor="register-email">Email</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
+                            id="register-email"
                             type="email"
                             placeholder="your@email.com"
                             {...field}
-                            aria-describedby="email-error"
+                            aria-describedby="register-email-error"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage id="register-email-error" />
                       </FormItem>
                     )}
                   />
@@ -147,16 +148,17 @@ export default function AuthPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel htmlFor="register-password">Password</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
+                            id="register-password"
                             type="password"
                             placeholder="Min. 6 characters"
                             {...field}
-                            aria-describedby="password-error"
+                            aria-describedby="register-password-error"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage id="register-password-error" />
                       </FormItem>
                     )}
                   />
@@ -165,21 +167,22 @@ export default function AuthPage() {
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
+                        <FormLabel htmlFor="register-confirm-password">Confirm Password</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
+                            id="register-confirm-password"
                             type="password"
                             placeholder="Re-enter password"
                             {...field}
-                            aria-describedby="confirm-password-error"
+                            aria-describedby="register-confirm-password-error"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage id="register-confirm-password-error" />
                       </FormItem>
                     )}
                   />
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full"
                     disabled={registerForm.formState.isSubmitting}
                   >
@@ -191,7 +194,15 @@ export default function AuthPage() {
             <div className="mt-4 text-center">
               <Button
                 variant="link"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  // Reset form states when switching
+                  if (isLogin) {
+                    registerForm.reset();
+                  } else {
+                    loginForm.reset();
+                  }
+                }}
                 className="text-sm text-muted-foreground"
               >
                 {isLogin
