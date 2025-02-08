@@ -1,4 +1,4 @@
-import { sessions, type Session, type InsertSession } from "@shared/schema";
+import { sessions, predefinedJobs, type Session, type InsertSession, type PredefinedJob, type InsertPredefinedJob } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -8,6 +8,9 @@ export interface IStorage {
   createSession(session: InsertSession): Promise<Session>;
   updateSession(id: number, session: Partial<InsertSession>): Promise<Session>;
   deleteSession(id: number): Promise<void>;
+  getPredefinedJobs(): Promise<PredefinedJob[]>;
+  createPredefinedJob(job: InsertPredefinedJob): Promise<PredefinedJob>;
+  deletePredefinedJob(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -44,6 +47,22 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSession(id: number): Promise<void> {
     await db.delete(sessions).where(eq(sessions.id, id));
+  }
+
+  async getPredefinedJobs(): Promise<PredefinedJob[]> {
+    return await db.select().from(predefinedJobs);
+  }
+
+  async createPredefinedJob(job: InsertPredefinedJob): Promise<PredefinedJob> {
+    const [createdJob] = await db
+      .insert(predefinedJobs)
+      .values(job)
+      .returning();
+    return createdJob;
+  }
+
+  async deletePredefinedJob(id: number): Promise<void> {
+    await db.delete(predefinedJobs).where(eq(predefinedJobs.id, id));
   }
 }
 

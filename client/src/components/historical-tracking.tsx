@@ -14,6 +14,7 @@ import { type Session } from "@shared/schema";
 import { format, isSameDay } from "date-fns";
 import { currencies } from "./currency-selector";
 import { Badge } from "@/components/ui/badge";
+import JobSelector from "@/components/job-selector"; // Fix import path
 
 const historicalSessionSchema = z.object({
   date: z.date(),
@@ -217,13 +218,9 @@ export default function HistoricalTracking() {
                   name="jobName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Job Name</FormLabel>
+                      <FormLabel>Job</FormLabel>
                       <FormControl>
-                        <Input
-                          type="text"
-                          placeholder="Enter job name"
-                          {...field}
-                        />
+                        <JobSelector value={field.value} onValueChange={field.onChange} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

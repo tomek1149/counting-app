@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Play, Pause } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Session } from "@shared/schema";
+import JobSelector from "./job-selector";
 
 export default function Timer() {
   const [isRunning, setIsRunning] = useState(false);
@@ -40,6 +40,15 @@ export default function Timer() {
       toast({
         title: "Error",
         description: "Please set an hourly rate first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!jobName && !isRunning) {
+      toast({
+        title: "Error",
+        description: "Please select a job first",
         variant: "destructive",
       });
       return;
@@ -94,18 +103,13 @@ export default function Timer() {
     <div className="space-y-4">
       <div className="flex gap-4 items-end">
         <div className="flex-1">
-          <Input
-            type="text"
-            placeholder="Enter job name"
-            value={jobName}
-            onChange={(e) => setJobName(e.target.value)}
-            disabled={isRunning}
-          />
+          <JobSelector value={jobName} onValueChange={setJobName} />
         </div>
         <Button
           size="lg"
           onClick={toggleTimer}
           className={isRunning ? "bg-destructive hover:bg-destructive/90" : ""}
+          disabled={!jobName && !isRunning}
         >
           {isRunning ? <Pause className="mr-2" /> : <Play className="mr-2" />}
           {isRunning ? "Stop" : "Start"} Timer

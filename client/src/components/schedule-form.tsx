@@ -12,6 +12,9 @@ import { useLanguage } from "@/contexts/language-context";
 import type { Session } from "@shared/schema";
 import { format, isSameDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import JobSelector from "@/components/job-selector";
+// Assuming JobSelector is imported from here
+
 
 const scheduleSchema = z.object({
   startTime: z.string(),
@@ -115,13 +118,9 @@ export default function ScheduleForm() {
               name="jobName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Job Name</FormLabel>
+                  <FormLabel>Job</FormLabel>
                   <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="Enter job name"
-                      {...field}
-                    />
+                    <JobSelector value={field.value} onValueChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -2,6 +2,11 @@ import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const predefinedJobs = pgTable("predefined_jobs", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+});
+
 export const sessions = pgTable("sessions", {
   id: serial("id").primaryKey(),
   jobName: text("job_name").notNull().default(""),
@@ -12,6 +17,11 @@ export const sessions = pgTable("sessions", {
   isScheduled: boolean("is_scheduled").notNull().default(false),
   repeatDays: text("repeat_days").array(), // Store days of the week for repeating sessions
 });
+
+export const insertPredefinedJobSchema = createInsertSchema(predefinedJobs)
+  .pick({
+    name: true,
+  });
 
 export const insertSessionSchema = createInsertSchema(sessions)
   .pick({
@@ -33,3 +43,5 @@ export const insertSessionSchema = createInsertSchema(sessions)
 
 export type InsertSession = z.infer<typeof insertSessionSchema>;
 export type Session = typeof sessions.$inferSelect;
+export type PredefinedJob = typeof predefinedJobs.$inferSelect;
+export type InsertPredefinedJob = z.infer<typeof insertPredefinedJobSchema>;

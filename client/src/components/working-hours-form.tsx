@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import JobSelector from "./job-selector";
 
 const workingHoursSchema = z.object({
   startTime: z.string(),
@@ -97,6 +98,15 @@ export default function WorkingHoursForm() {
     const endTimeStr = form.getValues("endTime");
     const jobName = form.getValues("jobName");
 
+    if (!jobName) {
+      toast({
+        title: "Error",
+        description: "Please select a job first",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const today = new Date();
     const startTime = new Date(today);
     const endTime = new Date(today);
@@ -119,13 +129,9 @@ export default function WorkingHoursForm() {
             name="jobName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Job Name</FormLabel>
+                <FormLabel>Job</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="text"
-                    placeholder="Enter job name"
-                    {...field}
-                  />
+                  <JobSelector value={field.value} onValueChange={field.onChange} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -279,7 +279,7 @@ export default function SessionList({ sessions }: SessionListProps) {
                             </p>
                           </div>
                         )}
-                        <div className="flex gap-2 ml-4 relative z-10">
+                        <div className="flex gap-2 ml-4 relative z-50">
                           {editingSessionId === session.id ? (
                             <>
                               <Button
