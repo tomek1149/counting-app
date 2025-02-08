@@ -4,6 +4,7 @@ import Timer from "@/components/timer";
 import SessionList from "@/components/session-list";
 import Summary from "@/components/summary";
 import WorkingHoursForm from "@/components/working-hours-form";
+import HistoricalTracking from "@/components/historical-tracking";
 import { useQuery } from "@tanstack/react-query";
 import type { Session } from "@shared/schema";
 import { Separator } from "@/components/ui/separator";
@@ -30,6 +31,8 @@ export default function Home() {
             <Timer />
           </CardContent>
         </Card>
+
+        <HistoricalTracking />
 
         <div className="grid gap-8 md:grid-cols-2">
           <SessionList sessions={sessions} />
