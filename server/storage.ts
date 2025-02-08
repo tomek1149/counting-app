@@ -1,4 +1,6 @@
-import { type Session, type InsertSession } from "@shared/schema";
+import { sessions, type Session, type InsertSession } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getSessions(): Promise<Session[]>;
@@ -8,43 +10,41 @@ export interface IStorage {
   deleteSession(id: number): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private sessions: Map<number, Session>;
-  private currentId: number;
-
-  constructor() {
-    this.sessions = new Map();
-    this.currentId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getSessions(): Promise<Session[]> {
-    return Array.from(this.sessions.values());
+    return await db.select().from(sessions);
   }
 
   async getSession(id: number): Promise<Session | undefined> {
-    return this.sessions.get(id);
+    const [session] = await db.select().from(sessions).where(eq(sessions.id, id));
+    return session;
   }
 
   async createSession(insertSession: InsertSession): Promise<Session> {
-    const id = this.currentId++;
-    const session: Session = { ...insertSession, id };
-    this.sessions.set(id, session);
+    const [session] = await db
+      .insert(sessions)
+      .values(insertSession)
+      .returning();
     return session;
   }
 
   async updateSession(id: number, update: Partial<InsertSession>): Promise<Session> {
-    const existing = await this.getSession(id);
-    if (!existing) {
+    const [session] = await db
+      .update(sessions)
+      .set(update)
+      .where(eq(sessions.id, id))
+      .returning();
+
+    if (!session) {
       throw new Error("Session not found");
     }
-    const updated = { ...existing, ...update };
-    this.sessions.set(id, updated);
-    return updated;
+
+    return session;
   }
 
   async deleteSession(id: number): Promise<void> {
-    this.sessions.delete(id);
+    await db.delete(sessions).where(eq(sessions.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
