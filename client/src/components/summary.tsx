@@ -1,15 +1,28 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type Session } from "@shared/schema";
+import { useState, useEffect } from "react";
 
 interface SummaryProps {
   sessions: Session[];
 }
 
 export default function Summary({ sessions }: SummaryProps) {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every second to recalculate earnings for active sessions
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   const calculateTotalEarnings = () => {
     return sessions.reduce((total, session) => {
       const start = new Date(session.startTime);
-      const end = session.endTime ? new Date(session.endTime) : new Date();
+      const end = session.endTime ? new Date(session.endTime) : 
+                 session.isActive ? currentTime : new Date(session.startTime);
       const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
       return total + hours * session.rate;
     }, 0).toFixed(2);
@@ -18,7 +31,8 @@ export default function Summary({ sessions }: SummaryProps) {
   const calculateTotalHours = () => {
     return sessions.reduce((total, session) => {
       const start = new Date(session.startTime);
-      const end = session.endTime ? new Date(session.endTime) : new Date();
+      const end = session.endTime ? new Date(session.endTime) : 
+                 session.isActive ? currentTime : new Date(session.startTime);
       const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
       return total + hours;
     }, 0).toFixed(2);
