@@ -43,14 +43,20 @@ export default function RateForm() {
     const now = new Date();
 
     try {
-      for (const rate of rates) {
-        // Create sessions starting from different times
-        const startTime = new Date(now.getTime() - Math.random() * 3600000); // Random start within last hour
+      // Create sessions with different states
+      for (let i = 0; i < rates.length; i++) {
+        const rate = rates[i];
+        const startTime = new Date(now.getTime() - (i + 1) * 15 * 60000); // Each 15 minutes before
+
+        // Only the last session will be active
+        const isActive = i === rates.length - 1;
+        const endTime = isActive ? null : new Date(startTime.getTime() + 10 * 60000); // 10 minutes duration
 
         await apiRequest("POST", "/api/sessions", {
           rate,
           startTime: startTime.toISOString(),
-          isActive: true,
+          endTime: endTime?.toISOString() || null,
+          isActive,
         });
       }
 
