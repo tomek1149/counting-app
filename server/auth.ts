@@ -4,6 +4,12 @@ import { storage } from "./storage";
 import { insertUserSchema, loginSchema } from "@shared/schema";
 import MemoryStore from "memorystore";
 
+declare module "express-session" {
+  interface SessionData {
+    userId: number;
+  }
+}
+
 const MemStore = MemoryStore(session);
 
 export function setupAuth(app: Express) {
@@ -33,7 +39,11 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ error: "Email already registered" });
       }
 
-      const user = await storage.createUser(userData);
+      // Remove confirmPassword before creating user
+      const { confirmPassword, ...userDataWithoutConfirm } = userData;
+      const user = await storage.createUser(userDataWithoutConfirm);
+
+      // Set session
       req.session.userId = user.id;
 
       // Return user without password

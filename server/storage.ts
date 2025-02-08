@@ -1,4 +1,4 @@
-import { sessions, predefinedJobs, users, type Session, type InsertSession, type PredefinedJob, type InsertPredefinedJob, type User, type InsertUser } from "@shared/schema";
+import { users, predefinedJobs, sessions, type Session, type InsertSession, type PredefinedJob, type InsertPredefinedJob, type User, type InsertUser } from "@shared/schema";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 
@@ -26,7 +26,7 @@ export interface IStorage {
   getPredefinedJobs(): Promise<PredefinedJob[]>;
   createPredefinedJob(job: InsertPredefinedJob): Promise<PredefinedJob>;
   deletePredefinedJob(id: number): Promise<void>;
-  createUser(user: InsertUser): Promise<User>;
+  createUser(user: Omit<InsertUser, "confirmPassword">): Promise<User>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUser(id: number): Promise<User | undefined>;
   validateUser(email: string, password: string): Promise<User | undefined>;
@@ -49,9 +49,16 @@ export class MemStorage implements IStorage {
   }
 
   async createSession(insertSession: InsertSession): Promise<Session> {
-    const session = {
+    const session: Session = {
       id: this.sessionId++,
-      ...insertSession,
+      jobName: insertSession.jobName,
+      rate: insertSession.rate,
+      startTime: insertSession.startTime,
+      endTime: insertSession.endTime || null,
+      isActive: insertSession.isActive || false,
+      isScheduled: insertSession.isScheduled || false,
+      repeatDays: insertSession.repeatDays || null,
+      userId: insertSession.userId || null
     };
     this.sessions.push(session);
     return session;
@@ -63,9 +70,12 @@ export class MemStorage implements IStorage {
       throw new Error("Session not found");
     }
 
-    const updatedSession = {
+    const updatedSession: Session = {
       ...session,
       ...update,
+      endTime: update.endTime || session.endTime,
+      repeatDays: update.repeatDays || session.repeatDays,
+      userId: update.userId ?? session.userId
     };
 
     this.sessions = this.sessions.map(s => 
@@ -84,9 +94,10 @@ export class MemStorage implements IStorage {
   }
 
   async createPredefinedJob(job: InsertPredefinedJob): Promise<PredefinedJob> {
-    const newJob = {
+    const newJob: PredefinedJob = {
       id: this.jobId++,
-      ...job,
+      name: job.name,
+      userId: job.userId || null
     };
     this.predefinedJobs.push(newJob);
     return newJob;
@@ -96,9 +107,9 @@ export class MemStorage implements IStorage {
     this.predefinedJobs = this.predefinedJobs.filter(j => j.id !== id);
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async createUser(insertUser: Omit<InsertUser, "confirmPassword">): Promise<User> {
     const hashedPassword = await hashPassword(insertUser.password);
-    const user = {
+    const user: User = {
       id: this.userId++,
       email: insertUser.email,
       password: hashedPassword,
