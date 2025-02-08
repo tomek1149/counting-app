@@ -6,12 +6,24 @@ import { format } from "date-fns";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import React, { useState, useEffect } from "react";
 
 interface SessionListProps {
   sessions: Session[];
 }
 
 export default function SessionList({ sessions }: SessionListProps) {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every second for live calculations
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   const deleteSession = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/sessions/${id}`);
@@ -23,7 +35,8 @@ export default function SessionList({ sessions }: SessionListProps) {
 
   const calculateDuration = (session: Session) => {
     const start = new Date(session.startTime);
-    const end = session.endTime ? new Date(session.endTime) : new Date();
+    const end = session.endTime ? new Date(session.endTime) : 
+               session.isActive ? currentTime : new Date(session.startTime);
     const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
     return hours.toFixed(2);
   };
