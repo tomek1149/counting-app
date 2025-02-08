@@ -50,9 +50,11 @@ export default function Home() {
 
         <HistoricalTracking />
 
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-8 md:grid-cols-2 relative">
           <SessionList sessions={sessions} />
-          <Summary sessions={sessions} />
+          <div className="relative z-0">
+            <Summary sessions={sessions} />
+          </div>
         </div>
       </div>
     </div>
