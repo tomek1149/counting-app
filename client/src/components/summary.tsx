@@ -23,8 +23,8 @@ export default function Summary({ sessions }: SummaryProps) {
     const totalUSD = sessions.reduce((total, session) => {
       const start = new Date(session.startTime);
       const end = session.endTime ? new Date(session.endTime) : 
-                 session.isActive ? new Date() : new Date(session.startTime);
-      const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                 session.isActive ? new Date() : start;
+      const hours = Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60 * 60));
       return total + hours * session.rate;
     }, 0);
 
@@ -37,13 +37,14 @@ export default function Summary({ sessions }: SummaryProps) {
     const totalMilliseconds = sessions.reduce((total, session) => {
       const start = new Date(session.startTime);
       const end = session.endTime ? new Date(session.endTime) : 
-                 session.isActive ? new Date() : new Date(session.startTime);
-      return total + (end.getTime() - start.getTime());
+                 session.isActive ? new Date() : start;
+      return total + Math.max(0, end.getTime() - start.getTime());
     }, 0);
 
-    const hours = Math.floor(totalMilliseconds / (1000 * 60 * 60));
-    const minutes = Math.floor((totalMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((totalMilliseconds % (1000 * 60)) / 1000);
+    const totalSeconds = Math.floor(totalMilliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
 
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
