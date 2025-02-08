@@ -5,6 +5,7 @@ import SessionList from "@/components/session-list";
 import Summary from "@/components/summary";
 import WorkingHoursForm from "@/components/working-hours-form";
 import HistoricalTracking from "@/components/historical-tracking";
+import ScheduleForm from "@/components/schedule-form";
 import { useQuery } from "@tanstack/react-query";
 import type { Session } from "@shared/schema";
 import { Separator } from "@/components/ui/separator";
@@ -35,6 +36,15 @@ export default function Home() {
             <WorkingHoursForm />
             <Separator />
             <Timer />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Schedule Future Sessions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScheduleForm />
           </CardContent>
         </Card>
 
