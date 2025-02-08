@@ -19,6 +19,8 @@ export const insertSessionSchema = createInsertSchema(sessions)
   })
   .extend({
     rate: z.number().min(1, "Rate must be greater than 0"),
+    startTime: z.string().transform((str) => new Date(str)),
+    endTime: z.string().transform((str) => new Date(str)).nullable().optional(),
   });
 
 export type InsertSession = z.infer<typeof insertSessionSchema>;

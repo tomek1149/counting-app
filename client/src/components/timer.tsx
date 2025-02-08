@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import type { Session } from "@shared/schema";
 
 export default function Timer() {
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState<Date | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const createSession = useMutation({
     mutationFn: async (data: any) => {
@@ -22,7 +23,7 @@ export default function Timer() {
   });
 
   const updateSession = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: { id: number } & Partial<Session>) => {
       const res = await apiRequest("PATCH", `/api/sessions/${data.id}`, data);
       return res.json();
     },
@@ -46,21 +47,42 @@ export default function Timer() {
       const now = new Date();
       setStartTime(now);
       setIsRunning(true);
-      await createSession.mutateAsync({
-        rate,
-        startTime: now.toISOString(),
-        isActive: true,
-      });
+      try {
+        await createSession.mutateAsync({
+          rate,
+          startTime: now.toISOString(),
+          isActive: true,
+        });
+      } catch (error) {
+        console.error('Failed to create session:', error);
+        setIsRunning(false);
+        toast({
+          title: "Error",
+          description: "Failed to start timer",
+          variant: "destructive",
+        });
+      }
     } else {
       setIsRunning(false);
-      const sessions = await queryClient.fetchQuery({ queryKey: ["/api/sessions"] });
-      const activeSession = sessions.find((s: any) => s.isActive);
+      const sessions = await queryClient.fetchQuery<Session[]>({ 
+        queryKey: ["/api/sessions"] 
+      });
+      const activeSession = sessions.find((s) => s.isActive);
       if (activeSession) {
-        await updateSession.mutateAsync({
-          id: activeSession.id,
-          endTime: new Date().toISOString(),
-          isActive: false,
-        });
+        try {
+          await updateSession.mutateAsync({
+            id: activeSession.id,
+            endTime: new Date().toISOString(),
+            isActive: false,
+          });
+        } catch (error) {
+          console.error('Failed to update session:', error);
+          toast({
+            title: "Error",
+            description: "Failed to stop timer",
+            variant: "destructive",
+          });
+        }
       }
     }
   };
