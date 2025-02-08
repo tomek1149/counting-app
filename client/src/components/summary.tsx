@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type Session } from "@shared/schema";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import CurrencySelector, { currencies, type CurrencyCode } from "./currency-selector";
 
 interface SummaryProps {
