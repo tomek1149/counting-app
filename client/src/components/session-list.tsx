@@ -16,11 +16,11 @@ interface SessionListProps {
 export default function SessionList({ sessions }: SessionListProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Update current time every second for live calculations
+  // Update more frequently for smoother animation
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
+    }, 100);
 
     return () => clearInterval(timer);
   }, []);

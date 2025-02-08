@@ -14,7 +14,7 @@ export default function Summary({ sessions }: SummaryProps) {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
+    }, 100); // Update more frequently for smoother animation
 
     return () => clearInterval(timer);
   }, []);
