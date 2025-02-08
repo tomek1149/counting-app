@@ -25,6 +25,7 @@ const scheduleSchema = z.object({
   startTime: z.string(),
   endTime: z.string(),
   days: z.array(z.string()).min(1, "Select at least one day"),
+  rate: z.number().min(1, "Rate must be greater than 0"),
 }).refine((data) => {
   const start = new Date(`1970-01-01T${data.startTime}`);
   const end = new Date(`1970-01-01T${data.endTime}`);
@@ -47,16 +48,12 @@ export default function ScheduleForm() {
       startTime: "09:00",
       endTime: "17:00",
       days: [],
+      rate: 0, // Default rate is 0.  User must input a valid rate.
     },
   });
 
   const createSchedule = useMutation({
     mutationFn: async (data: ScheduleFormValues) => {
-      const rate = parseInt(localStorage.getItem("hourlyRate") || "0");
-      if (rate <= 0) {
-        throw new Error("Please set an hourly rate first");
-      }
-
       // Create a session for each selected day
       const today = new Date();
       const startDate = new Date(today);
@@ -82,7 +79,7 @@ export default function ScheduleForm() {
         sessionEndTime.setHours(endHours, endMinutes, 0, 0);
 
         await apiRequest("POST", "/api/sessions", {
-          rate,
+          rate: data.rate,
           startTime: sessionStartTime.toISOString(),
           endTime: sessionEndTime.toISOString(),
           isActive: false,
@@ -117,6 +114,25 @@ export default function ScheduleForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="rate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('common', 'hourlyRate')} (PLN)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="1"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="startTime"
