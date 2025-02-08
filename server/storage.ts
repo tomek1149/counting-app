@@ -1,6 +1,4 @@
 import { sessions, predefinedJobs, type Session, type InsertSession, type PredefinedJob, type InsertPredefinedJob } from "@shared/schema";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getSessions(): Promise<Session[]>;
@@ -13,57 +11,67 @@ export interface IStorage {
   deletePredefinedJob(id: number): Promise<void>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class MemStorage implements IStorage {
+  private sessions: Session[] = [];
+  private predefinedJobs: PredefinedJob[] = [];
+  private sessionId = 1;
+  private jobId = 1;
+
   async getSessions(): Promise<Session[]> {
-    return await db.select().from(sessions);
+    return this.sessions;
   }
 
   async getSession(id: number): Promise<Session | undefined> {
-    const [session] = await db.select().from(sessions).where(eq(sessions.id, id));
-    return session;
+    return this.sessions.find(s => s.id === id);
   }
 
   async createSession(insertSession: InsertSession): Promise<Session> {
-    const [session] = await db
-      .insert(sessions)
-      .values(insertSession)
-      .returning();
+    const session = {
+      id: this.sessionId++,
+      ...insertSession,
+    };
+    this.sessions.push(session);
     return session;
   }
 
   async updateSession(id: number, update: Partial<InsertSession>): Promise<Session> {
-    const [session] = await db
-      .update(sessions)
-      .set(update)
-      .where(eq(sessions.id, id))
-      .returning();
-
+    const session = await this.getSession(id);
     if (!session) {
       throw new Error("Session not found");
     }
 
-    return session;
+    const updatedSession = {
+      ...session,
+      ...update,
+    };
+
+    this.sessions = this.sessions.map(s => 
+      s.id === id ? updatedSession : s
+    );
+
+    return updatedSession;
   }
 
   async deleteSession(id: number): Promise<void> {
-    await db.delete(sessions).where(eq(sessions.id, id));
+    this.sessions = this.sessions.filter(s => s.id !== id);
   }
 
   async getPredefinedJobs(): Promise<PredefinedJob[]> {
-    return await db.select().from(predefinedJobs);
+    return this.predefinedJobs;
   }
 
   async createPredefinedJob(job: InsertPredefinedJob): Promise<PredefinedJob> {
-    const [createdJob] = await db
-      .insert(predefinedJobs)
-      .values(job)
-      .returning();
-    return createdJob;
+    const newJob = {
+      id: this.jobId++,
+      ...job,
+    };
+    this.predefinedJobs.push(newJob);
+    return newJob;
   }
 
   async deletePredefinedJob(id: number): Promise<void> {
-    await db.delete(predefinedJobs).where(eq(predefinedJobs.id, id));
+    this.predefinedJobs = this.predefinedJobs.filter(j => j.id !== id);
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage();
