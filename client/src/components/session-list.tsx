@@ -52,8 +52,9 @@ export default function SessionList({ sessions }: SessionListProps) {
     const end = session.endTime ? new Date(session.endTime) : 
                session.isActive ? new Date() : new Date(session.startTime);
     const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    const earnings = hours * session.rate * currencies["PLN"].rate;
-    return earnings.toFixed(3);
+    // Calculate earnings directly in PLN without currency conversion
+    const earnings = hours * session.rate;
+    return earnings.toFixed(2);
   };
 
   return (
@@ -70,7 +71,7 @@ export default function SessionList({ sessions }: SessionListProps) {
             >
               <div>
                 <p className="font-medium">
-                  Rate: ${session.rate}/hr
+                  Rate: {currencies["PLN"].symbol}{session.rate}/hr
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {format(new Date(session.startTime), "MMM d, HH:mm:ss")} -{" "}

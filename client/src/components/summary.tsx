@@ -20,7 +20,7 @@ export default function Summary({ sessions }: SummaryProps) {
   }, []);
 
   const calculateTotalEarnings = () => {
-    const totalUSD = sessions.reduce((total, session) => {
+    const totalPLN = sessions.reduce((total, session) => {
       const start = new Date(session.startTime);
       const end = session.endTime ? new Date(session.endTime) : 
                  session.isActive ? new Date() : start;
@@ -28,9 +28,14 @@ export default function Summary({ sessions }: SummaryProps) {
       return total + hours * session.rate;
     }, 0);
 
-    // Convert to selected currency
+    // Convert from PLN to selected currency if needed
+    if (currency === "PLN") {
+      return totalPLN.toFixed(2);
+    }
+    // Convert PLN to USD first (PLN rate / USD rate), then to target currency
+    const totalUSD = totalPLN / currencies["PLN"].rate;
     const convertedAmount = totalUSD * currencies[currency].rate;
-    return convertedAmount.toFixed(3);
+    return convertedAmount.toFixed(2);
   };
 
   const calculateTotalHours = () => {
