@@ -1,5 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
+import serverless from 'serverless-http'
+
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
@@ -63,3 +65,7 @@ app.use((req, res, next) => {
     log(`serving on port ${PORT}`);
   });
 })();
+
+
+module.exports = app;
+module.exports.handler = serverless(app);
