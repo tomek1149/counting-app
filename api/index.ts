@@ -42,7 +42,6 @@ app.use((req, res, next) => {
 (async () => {
   const server = registerRoutes(app);
 
-  // Error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -51,22 +50,13 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Development-specific configuration
-  if (app.get("env") === "development") {
+  if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
-
-  // Serve locally if running in development
-  if (process.env.NODE_ENV !== "production") {
-    const PORT = 5000;
-    server.listen(PORT, "0.0.0.0", () => {
-      log(`serving on port ${PORT}`);
-    });
-  }
 })();
 
-// Export the serverless function handler for Vercel
-module.exports = app;
-module.exports.handler = serverless(app);
+// Export the serverless handler and the app
+export const handler = serverless(app);
+export default app;
