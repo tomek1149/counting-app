@@ -1,7 +1,9 @@
-import express, { type Request, Response, NextFunction } from "express";
+import { type Request, Response, NextFunction } from "express";
+
+import express from 'serverless-express/express';
+import handler from 'serverless-express/handler';
 import { registerRoutes } from "../server/routes";
 import { setupVite, serveStatic, log } from "../server/vite";
-import serverless from "serverless-http";
 
 const app = express();
 app.use(express.json());
@@ -58,5 +60,5 @@ app.use((req, res, next) => {
 })();
 
 // Export the serverless handler and the app
-export const handler = serverless(app);
+module.exports.api = handler(app)
 export default app;
