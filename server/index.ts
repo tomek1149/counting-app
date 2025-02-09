@@ -1,6 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import serverless from 'serverless-http'
 
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -68,4 +67,3 @@ app.use((req, res, next) => {
 
 
 module.exports = app;
-module.exports.handler = serverless(app);
