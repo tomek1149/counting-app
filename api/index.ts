@@ -61,4 +61,3 @@ app.use((req, res, next) => {
 
 // Export the serverless handler and the app
 module.exports.api = handler(app)
-export default app;
