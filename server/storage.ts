@@ -26,9 +26,15 @@ export class MemStorage implements IStorage {
   }
 
   async createSession(insertSession: InsertSession): Promise<Session> {
-    const session = {
+    const session: Session = {
       id: this.sessionId++,
-      ...insertSession,
+      jobName: insertSession.jobName || "",
+      rate: insertSession.rate,
+      startTime: insertSession.startTime,
+      endTime: insertSession.endTime || null,
+      isActive: insertSession.isActive ?? true,
+      isScheduled: insertSession.isScheduled ?? false,
+      repeatDays: insertSession.repeatDays || null,
     };
     this.sessions.push(session);
     return session;
@@ -40,9 +46,15 @@ export class MemStorage implements IStorage {
       throw new Error("Session not found");
     }
 
-    const updatedSession = {
+    const updatedSession: Session = {
       ...session,
-      ...update,
+      jobName: update.jobName ?? session.jobName,
+      rate: update.rate ?? session.rate,
+      startTime: update.startTime ?? session.startTime,
+      endTime: update.endTime ?? session.endTime,
+      isActive: update.isActive ?? session.isActive,
+      isScheduled: update.isScheduled ?? session.isScheduled,
+      repeatDays: update.repeatDays ?? session.repeatDays,
     };
 
     this.sessions = this.sessions.map(s => 
@@ -61,9 +73,9 @@ export class MemStorage implements IStorage {
   }
 
   async createPredefinedJob(job: InsertPredefinedJob): Promise<PredefinedJob> {
-    const newJob = {
+    const newJob: PredefinedJob = {
       id: this.jobId++,
-      ...job,
+      name: job.name,
     };
     this.predefinedJobs.push(newJob);
     return newJob;
